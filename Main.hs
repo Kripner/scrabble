@@ -9,7 +9,7 @@ import Graphics.Gloss.Interface.IO.Interact
 import qualified Data.Sequence as S
 
 main :: IO ()
-main = play (InWindow "Scrabble" (750, 500) (0, 0)) white 1 initialWorld drawWorld handleEvent updateWorld
+main = play (InWindow "Scrabble" windowSize (0, 0)) white 1 initialWorld drawWorld handleEvent updateWorld
 
 updateWorld :: Float -> World -> World
 updateWorld _ = id
@@ -23,7 +23,9 @@ initialWorld = initialBoard
 
 -- Graphics
 
+windowSize = (1200, 750)
 tileSize = 30 :: Float
+boardSize = (tileSize * fromIntegral boardWidth, tileSize * fromIntegral boardHeight)
 charsScale = 0.2 :: Float
 type Position = (Float, Float)
 
@@ -33,8 +35,11 @@ drawWorld = drawBoard (0, 100)
 drawBoard :: Position -> Board -> Picture
 drawBoard (x, y) board =
   Translate x y $
-  Pictures $
-  liftA2 drawTile' [0 .. boardWidth - 1] [0 .. boardHeight - 1]
+  Pictures [
+      Color green $ rectangleSolid (fst boardSize) (snd boardSize),
+      Translate (-(fst boardSize - tileSize) / 2) (-(snd boardSize - tileSize) / 2) $ Pictures $
+          liftA2 drawTile' [0 .. boardWidth - 1] [0 .. boardHeight - 1]
+  ]
   where
     drawTile' col row =
       drawTile (tileSize * fromIntegral col, tileSize * fromIntegral row)
@@ -55,7 +60,7 @@ drawTile (x, y) tile content =
     showContent (Character c) = Scale charsScale charsScale $ drawChar c
 
 drawTileBackground :: TileType -> Picture
-drawTileBackground Normal = Color green $ rectangleSolid (tileSize - 1) (tileSize - 1)
+drawTileBackground Normal = Blank
 drawTileBackground tileType =
   Color (col tileType) $
   Pictures [
@@ -64,7 +69,11 @@ drawTileBackground tileType =
       Rotate 45 $ rectangleSolid (tileSize - 1) (tileSize - 1)
   ]
   where
-    col _ = red
+    col DoubleLetter = makeColor 0.3 0.83 0.95 1
+    col TripleLetter = makeColor 0.15 0.63 0.85 1
+    col DoubleWord = light orange
+    col TripleWord = red
+    col CenterTile = yellow
     triangleSize = 8
 
 drawTriangle :: Position -> Position -> Position -> Picture
