@@ -16,7 +16,7 @@ boardHeight = length tilesArray
 boardWidth = length (head tilesArray)
 
 initialBoard :: Board
-initialBoard = S.replicate boardHeight (S.replicate boardWidth (Character 'A'))
+initialBoard = S.replicate boardHeight (S.replicate boardWidth Empty)
 
 type MatrixIndex = (Int, Int)
 

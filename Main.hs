@@ -36,7 +36,7 @@ drawBoard :: Position -> Board -> Picture
 drawBoard (x, y) board =
   Translate x y $
   Pictures [
-      Color green $ rectangleSolid (fst boardSize) (snd boardSize),
+      Color (makeColor 0.12 0.6 0.5 1) $ rectangleSolid (fst boardSize) (snd boardSize),
       Translate (-(fst boardSize - tileSize) / 2) (-(snd boardSize - tileSize) / 2) $ Pictures $
           liftA2 drawTile' [0 .. boardWidth - 1] [0 .. boardHeight - 1]
   ]
@@ -52,16 +52,23 @@ drawTile (x, y) tile content =
   Color black $
   Pictures [
       Color black $ rectangleWire tileSize tileSize,
-      drawTileBackground tile,
-      Translate (-tileSize / 2) (-tileSize / 2) $ showContent content
+      drawTileEffect tile,
+      drawTileContent content
   ]
+
+drawTileContent :: TileContent -> Picture
+drawTileContent content = showContent content
   where
     showContent Empty = Blank
-    showContent (Character c) = Scale charsScale charsScale $ drawChar c
+    showContent (Character c) =
+      Pictures [
+        Color white $ rectangleSolid (tileSize - 1) (tileSize - 1),
+        Translate (-tileSize / 2) (-tileSize / 2) $ Scale charsScale charsScale $ drawChar c]
 
-drawTileBackground :: TileType -> Picture
-drawTileBackground Normal = Blank
-drawTileBackground tileType =
+
+drawTileEffect :: TileType -> Picture
+drawTileEffect Normal = Blank
+drawTileEffect tileType =
   Color (col tileType) $
   Pictures [
       rectangleSolid (tileSize - 1) (tileSize - 1),
