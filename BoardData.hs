@@ -2,7 +2,7 @@ module BoardData where
 
 import qualified Data.Sequence as S
 
-data TileType = Normal | DoubleLetter | TrippleLetter | DoubleWord | TrippleWord
+data TileType = Normal | DoubleLetter | TripleLetter | DoubleWord | TripleWord | CenterTile
 data TileContent = Empty | Character Char
 
 type Matrix a = S.Seq (S.Seq a)
@@ -26,6 +26,20 @@ at mat (col, row) = (S.index . S.index mat) col row
 
 tilesArray :: [[TileType]]
 tilesArray = [
-  [Normal, DoubleLetter, TrippleLetter],
-  [DoubleWord, TrippleWord, Normal],
-  [Normal, Normal, Normal]]
+  [TripleWord, Normal, Normal, DoubleLetter, Normal, Normal, Normal, TripleWord, Normal, Normal, Normal, DoubleLetter, Normal, Normal, TripleWord],
+  [Normal, DoubleWord, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, DoubleWord, Normal],
+  [Normal, Normal, DoubleWord, Normal, Normal, Normal, DoubleLetter, Normal, DoubleLetter, Normal, Normal, Normal, DoubleWord, Normal, Normal],
+  [DoubleLetter, Normal, Normal, DoubleWord, Normal, Normal, Normal, DoubleWord, Normal, Normal, Normal, DoubleWord, Normal, Normal, DoubleLetter],
+  [Normal, Normal, Normal, Normal, DoubleWord, Normal, Normal, Normal, Normal, Normal, DoubleWord, Normal, Normal, Normal, Normal],
+  [Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal],
+  [Normal, Normal, DoubleLetter, Normal, Normal, Normal, DoubleLetter, Normal, DoubleLetter, Normal, Normal, Normal, DoubleLetter, Normal, Normal],
+
+  [TripleWord, Normal, Normal, DoubleLetter, Normal, Normal, Normal, CenterTile, Normal, Normal, Normal, DoubleLetter, Normal, Normal, TripleWord],
+
+  [Normal, Normal, DoubleLetter, Normal, Normal, Normal, DoubleLetter, Normal, DoubleLetter, Normal, Normal, Normal, DoubleLetter, Normal, Normal],
+  [Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal],
+  [Normal, Normal, Normal, Normal, DoubleWord, Normal, Normal, Normal, Normal, Normal, DoubleWord, Normal, Normal, Normal, Normal],
+  [DoubleLetter, Normal, Normal, DoubleWord, Normal, Normal, Normal, DoubleWord, Normal, Normal, Normal, DoubleWord, Normal, Normal, DoubleLetter],
+  [Normal, Normal, DoubleWord, Normal, Normal, Normal, DoubleLetter, Normal, DoubleLetter, Normal, Normal, Normal, DoubleWord, Normal, Normal],
+  [Normal, DoubleWord, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, TripleLetter, Normal, Normal, Normal, DoubleWord, Normal],
+  [TripleWord, Normal, Normal, DoubleLetter, Normal, Normal, Normal, TripleWord, Normal, Normal, Normal, DoubleLetter, Normal, Normal, TripleWord]]
