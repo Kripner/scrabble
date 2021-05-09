@@ -1,0 +1,6 @@
+# Vim-specific
+*~
+*.swp
+
+# Cabal-specific
+dist-newstyle
