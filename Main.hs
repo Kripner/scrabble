@@ -113,8 +113,12 @@ drawCursor pos =
 handleEvent :: Event -> World -> World
 handleEvent (EventKey key Down _ _) w@(board, cursor) = case key of
   SpecialKey k -> (board, handleUpdateCursor k cursor)
+  Char c -> handleUpdateLetter c w
   _ -> w
 handleEvent _ w = w
+
+handleUpdateLetter :: Char -> World -> World
+handleUpdateLetter c (board, cursor) = (set board cursor (Character c), cursor)
 
 handleUpdateCursor :: SpecialKey -> Cursor -> Cursor
 handleUpdateCursor key (col, row) = (clamp 0 (boardWidth - 1) newCol, clamp 0 (boardHeight - 1) newRow)

@@ -21,8 +21,10 @@ initialBoard = S.replicate boardHeight (S.replicate boardWidth Empty)
 type MatrixIndex = (Int, Int)
 
 at :: Matrix a -> MatrixIndex -> a
-at mat (col, row) = (S.index . S.index mat) col row
--- TODO: maybe use curry?
+at mat = uncurry (S.index . S.index mat)
+
+set :: Matrix a -> MatrixIndex -> a -> Matrix a
+set mat (col, row) val = S.update col (S.update row val (S.index mat col)) mat
 
 tilesArray :: [[TileType]]
 tilesArray = [
