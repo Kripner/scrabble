@@ -33,6 +33,9 @@ at mat = uncurry (S.index . S.index mat)
 set :: Matrix a -> MatrixIndex -> a -> Matrix a
 set mat (col, row) val = S.update col (S.update row val (S.index mat col)) mat
 
+isInside :: MatrixIndex -> Bool
+isInside (col, row) = col >= 0 && col < boardWidth && row >= 0 && row < boardHeight
+
 tilesArray :: [[TileType]]
 tilesArray = [
   [TripleWord, Normal, Normal, DoubleLetter, Normal, Normal, Normal, TripleWord, Normal, Normal, Normal, DoubleLetter, Normal, Normal, TripleWord],
