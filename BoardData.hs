@@ -1,9 +1,16 @@
 module BoardData where
 
 import qualified Data.Sequence as S
+import Data.Char
 
 data TileType = Normal | DoubleLetter | TripleLetter | DoubleWord | TripleWord | CenterTile
 data TileContent = Empty | Character Char
+
+isValidInput :: Char -> Bool
+isValidInput c = isAsciiLower c || isAsciiUpper c
+
+normalizeInput :: Char -> Char
+normalizeInput = toUpper
 
 type Matrix a = S.Seq (S.Seq a)
 type Tiles = Matrix TileType

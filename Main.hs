@@ -118,7 +118,9 @@ handleEvent (EventKey key Down _ _) w@(board, cursor) = case key of
 handleEvent _ w = w
 
 handleUpdateLetter :: Char -> World -> World
-handleUpdateLetter c (board, cursor) = (set board cursor (Character c), cursor)
+handleUpdateLetter c w@(board, cursor)
+  | isValidInput c = (set board cursor (Character $ normalizeInput c), cursor)
+  | otherwise = w
 
 handleUpdateCursor :: SpecialKey -> Cursor -> Cursor
 handleUpdateCursor key (col, row) = (clamp 0 (boardWidth - 1) newCol, clamp 0 (boardHeight - 1) newRow)
