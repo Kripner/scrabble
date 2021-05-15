@@ -49,7 +49,7 @@ executable scrabble
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules: BoardData
+    other-modules: BoardData, WordSearch, Utils
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
