@@ -1,6 +1,7 @@
 module Main where
 
 import BoardData
+import Utils
 
 import Control.Applicative
 
@@ -13,15 +14,6 @@ main = play (InWindow "Scrabble" windowSize (0, 0)) white 1 initialWorld drawWor
 
 updateWorld :: Float -> World -> World
 updateWorld _ = id
-
-(//) :: Int -> Int -> Int
-a // b = truncate $ fromIntegral a / fromIntegral b
-
-clamp :: (Num a, Ord a) => a -> a -> a -> a
-clamp from to x
-  | x < from = from
-  | x > to = to
-  | otherwise = x
 
 -- Model
 
@@ -96,7 +88,6 @@ drawTileEffect tileType =
     col DoubleWord = light orange
     col TripleWord = red
     col CenterTile = yellow
-    triangleSize = 8
 
 drawChar :: Char -> Picture
 drawChar c = Translate 30 10 $ Text [c]
