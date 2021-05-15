@@ -4,7 +4,9 @@ import qualified Data.Sequence as S
 import Data.Char
 
 data TileType = Normal | DoubleLetter | TripleLetter | DoubleWord | TripleWord | CenterTile
+  deriving (Eq, Show)
 data TileContent = Empty | Character Char
+  deriving (Eq, Show)
 
 isValidInput :: Char -> Bool
 isValidInput c = isAsciiLower c || isAsciiUpper c

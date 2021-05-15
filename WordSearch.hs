@@ -1,17 +1,28 @@
+{-# LANGUAGE TupleSections #-}
+
 module WordSearch where
 
 import BoardData
+import Utils
+
 import Data.List
 import qualified Data.Set as S
 import Prelude hiding (Right)
+import Debug.Trace
 
 type Hand = [Char]
 
 data Direction = Down | Right
+  deriving (Eq, Show)
 
 type WordPlacement = (String, MatrixIndex, Direction)
 
 type Dictionary = S.Set String
+
+
+sampleHand = "HELL"
+sampleDict = S.fromList ["HELLO", "BOX", "WINDOW"]
+
 
 orthogonal :: Direction -> Direction
 orthogonal Down = Right
@@ -22,40 +33,41 @@ move (col, row) Down = (col, row + 1)
 move (col, row) Right = (col + 1, row)
 
 hasNeighbour :: MatrixIndex -> Board -> Bool
-hasNeighbour (col, row) board = any (\idx -> isInside idx && board `at` idx != Empty) neighbours
+hasNeighbour (col, row) board = any (\idx -> isInside idx && board `at` idx /= Empty) neighbours
   where
     neighbours = [(col + 1, row), (col - 1, row), (col, row + 1), (col, row - 1)]
 
 search :: Board -> Hand -> Dictionary -> [WordPlacement]
-search board hand dict = do
+search board hand dict = concat $ do
   -- the topmost, leftmost position of the placed word
   firstCol <- [0 .. boardWidth - 1]
   firstRow <- [0 .. boardHeight - 1]
   direction <- [Down, Right]
   let prefix = getPrefix (firstCol, firstRow) direction board
-  searchFrom (firstCol, firstRow) direction board hand dict
+  return $ searchFrom (firstCol, firstRow) direction prefix board hand dict
 
+-- TODO: use tries
 searchFrom :: MatrixIndex -> Direction -> String -> Board -> [Char] -> Dictionary -> [WordPlacement]
-searchFrom startIdx dir startPrefix board startHand dict = f descriptors startPrefix startHand
+searchFrom startIdx dir startPrefix board startHand dict = searchFrom' descriptors startPrefix startHand `debug` (show (filter (\d -> isAnchored d) descriptors))
   where
     descriptors = getDescriptors startIdx dir board (length startHand)
-    f [] _ _ = []
-    f ((Descriptor idx anchored oPref oSuf suffix) : descriptors) prefix hand
-      | not ((null oPref && null oSuf) || (oPref ++ c : oSuf) `S.member` dict) = []
-      | otherwise =
-          let
-            newPref c = prefix ++ [c]
-            fullWord c = prefix ++ c : suffix
-            validWord c = anchored && (fullWord c) `S.member` dict
-            continue c = f descriptors (newPref c) (delete c hand)
-           in map (\c -> if validWord c then (newPref c, startIdx, dir) : continue c else continue c
+    searchFrom' [] _ _ = []
+    searchFrom' ((PositionDescriptor idx anchored oPref oSuf suffix) : descriptors) prefix hand =
+      let
+        newPref c = prefix ++ [c]
+        fullWord c = prefix ++ c : suffix
+        validWord c = anchored && (fullWord c) `S.member` dict
+        continue c = searchFrom' descriptors (newPref c) (delete c hand)
+       in concat $
+          map (\c -> if validWord c then (fullWord c, startIdx, dir) : continue c else continue c) $
+          filter (\c -> (null oPref && null oSuf) || (oPref ++ c : oSuf) `S.member` dict) hand
 
 getDescriptors :: MatrixIndex -> Direction -> Board -> Int -> [PositionDescriptor]
 getDescriptors startIdx dir board maxLen =
   let indexes = take maxLen $ takeWhile (\pos -> (board `at` pos) == Empty) $ walk startIdx dir
-      hadNeighbour = foldl (\had idx -> had || hasNeighbour idx board) False allIndexes
+      hadNeighbour = tail $ scanl (\had idx -> had || hasNeighbour idx board) False indexes
       orthogonalDir = orthogonal dir
-   in map (\idx anchored -> PositionDescriptor
+   in map (\(idx, anchored) -> PositionDescriptor
         idx
         anchored
         (getPrefix idx orthogonalDir board)
@@ -70,6 +82,7 @@ data PositionDescriptor = PositionDescriptor
     orthogonalSuff :: String,
     suffix :: String
   }
+  deriving (Eq, Show)
 
 --checkOrtogonalDirection :: MatrixIndex -> Direction -> Board -> Dictionary -> Bool
 --checkOrtogonalDirection idx dir board dict = length w == 1 || w `S.member` dict
@@ -79,7 +92,7 @@ data PositionDescriptor = PositionDescriptor
 --getFullWord pos c dir board = getPrefix pos dir board ++ c : getSuffix pos dir board
 
 getPrefix :: MatrixIndex -> Direction -> Board -> String
-getPrefix (col, row) dir = reverse $ takeNonempty prefPositions
+getPrefix (col, row) dir board = reverse $ takeNonempty prefPositions board
   where
     prefPositions = case dir of
       Down -> walkRev (col, row - 1) Down
@@ -99,10 +112,9 @@ walk (col, row) dir = case dir of
 
 walkRev :: MatrixIndex -> Direction -> [MatrixIndex]
 walkRev (col, row) dir = case dir of
-  Down -> map (col,) [row, row + 1 .. boardHeight - 1]
-  Right -> map (,row) [col, col + 1 .. boardWidth - 1]
+  Down -> map (col,) [row, row - 1 .. boardHeight - 1]
+  Right -> map (,row) [col, col - 1 .. boardWidth - 1]
 
 takeNonempty :: [MatrixIndex] -> Board -> String
 takeNonempty positions board =
-  map (\(Character c) -> c) $
-    takeWhile (\pos -> (board `at` pos) != Empty) positions
+  map (\(Character c) -> c) $ takeWhile (/= Empty) $ map (at board) positions

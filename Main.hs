@@ -1,6 +1,7 @@
 module Main where
 
 import BoardData
+import WordSearch hiding (Down)
 import Utils
 
 import Control.Applicative
@@ -111,6 +112,7 @@ handleEvent _ w = w
 handleUpdateLetter :: Char -> World -> World
 handleUpdateLetter c w@(board, cursor)
   | isValidInput c = (set board cursor (Character $ normalizeInput c), cursor)
+  | c == '1' = w `debug` show (head (search board sampleHand sampleDict))
   | otherwise = w
 
 handleUpdateCursor :: SpecialKey -> Cursor -> Cursor
