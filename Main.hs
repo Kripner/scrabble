@@ -14,37 +14,53 @@ main = play (InWindow "Scrabble" windowSize (0, 0)) white 1 initialWorld drawWor
 updateWorld :: Float -> World -> World
 updateWorld _ = id
 
+(//) :: Int -> Int -> Int
+a // b = truncate $ fromIntegral a / fromIntegral b
+
+clamp :: (Num a, Ord a) => a -> a -> a -> a
+clamp from to x
+  | x < from = from
+  | x > to = to
+  | otherwise = x
+
 -- Model
 
-type World = Board
+type Cursor = MatrixIndex
+type World = (Board, Cursor)
 
 initialWorld :: World
-initialWorld = initialBoard
+initialWorld = (initialBoard, (boardWidth // 2, boardHeight // 2))
 
 -- Graphics
 
+type Position = (Float, Float)
 windowSize = (1200, 750)
 tileSize = 30 :: Float
 boardSize = (tileSize * fromIntegral boardWidth, tileSize * fromIntegral boardHeight)
 charsScale = 0.2 :: Float
-type Position = (Float, Float)
 
 drawWorld :: World -> Picture
-drawWorld = drawBoard (0, 100)
+drawWorld (board, cursor) =
+  Translate 0 100 $
+  Pictures [
+    drawBoard board,
+    drawCursor cursor
+  ]
 
-drawBoard :: Position -> Board -> Picture
-drawBoard (x, y) board =
-  Translate x y $
+indexToPosition :: MatrixIndex -> Position
+indexToPosition (col, row) =
+  (tileSize * fromIntegral col - (fst boardSize - tileSize) / 2,
+   tileSize * fromIntegral row - (snd boardSize - tileSize) / 2)
+
+drawBoard :: Board -> Picture
+drawBoard board =
   Pictures [
       Color (makeColor 0.12 0.6 0.5 1) $ rectangleSolid (fst boardSize) (snd boardSize),
-      Translate (-(fst boardSize - tileSize) / 2) (-(snd boardSize - tileSize) / 2) $ Pictures $
-          liftA2 drawTile' [0 .. boardWidth - 1] [0 .. boardHeight - 1]
+      Pictures $ liftA2 drawTile' [0 .. boardWidth - 1] [0 .. boardHeight - 1]
   ]
   where
-    drawTile' col row =
-      drawTile (tileSize * fromIntegral col, tileSize * fromIntegral row)
-               (tiles `at` (col, row))
-               (board `at` (col, row))
+    drawTile' col row = let pos = (col, row)
+                        in drawTile (indexToPosition pos) (tiles `at` pos) (board `at` pos)
 
 drawTile :: Position -> TileType -> TileContent -> Picture
 drawTile (x, y) tile content =
@@ -72,7 +88,6 @@ drawTileEffect tileType =
   Color (col tileType) $
   Pictures [
       rectangleSolid (tileSize - 1) (tileSize - 1),
-      --drawTriangle (-tileSize / 2, tileSize / 2) (tileSize / 2, tileSize / 2) (0, tileSize / 2 + triangleSize)
       Rotate 45 $ rectangleSolid (tileSize - 1) (tileSize - 1)
   ]
   where
@@ -83,13 +98,30 @@ drawTileEffect tileType =
     col CenterTile = yellow
     triangleSize = 8
 
-drawTriangle :: Position -> Position -> Position -> Picture
-drawTriangle a b c = Polygon [a, b, c]
-
 drawChar :: Char -> Picture
 drawChar c = Translate 30 10 $ Text [c]
+
+drawCursor :: Cursor -> Picture
+drawCursor pos =
+  Translate x y $
+  Color (makeColor 0.9 0.3 0.5 0.6) $
+  rectangleSolid tileSize tileSize
+  where (x, y) = indexToPosition pos
 
 -- Controls
 
 handleEvent :: Event -> World -> World
-handleEvent e w = w
+handleEvent (EventKey key Down _ _) w@(board, cursor) = case key of
+  SpecialKey k -> (board, handleUpdateCursor k cursor)
+  _ -> w
+handleEvent _ w = w
+
+handleUpdateCursor :: SpecialKey -> Cursor -> Cursor
+handleUpdateCursor key (col, row) = (clamp 0 (boardWidth - 1) newCol, clamp 0 (boardHeight - 1) newRow)
+  where
+    (newCol, newRow) = case key of
+      KeyLeft -> (col - 1, row)
+      KeyUp -> (col, row + 1)
+      KeyRight -> (col + 1, row)
+      KeyDown -> (col, row - 1)
+      _ -> (col, row)
