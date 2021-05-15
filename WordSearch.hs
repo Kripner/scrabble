@@ -1,26 +1,30 @@
 module WordSearch where
 
 import BoardData
-
-import qualified Data.Set as S
 import Data.List
+import qualified Data.Set as S
+import Prelude hiding (Right)
 
 type Hand = [Char]
-type WordDirection = Down | Right
-type WordPlacement = (String, MatrixIndex, WordDirection)
+
+data Direction = Down | Right
+
+type WordPlacement = (String, MatrixIndex, Direction)
+
 type Dictionary = S.Set String
 
-orthogonal :: WordDirection -> WordDirection
+orthogonal :: Direction -> Direction
 orthogonal Down = Right
 orthogonal Right = Down
 
-move :: MatrixIndex -> WordDirection -> MatrixIndex
+move :: MatrixIndex -> Direction -> MatrixIndex
 move (col, row) Down = (col, row + 1)
 move (col, row) Right = (col + 1, row)
 
 hasNeighbour :: MatrixIndex -> Board -> Bool
 hasNeighbour (col, row) board = any (\idx -> isInside idx && board `at` idx != Empty) neighbours
-  where neighbours = [(col + 1, row), (col - 1, row), (col, row + 1), (col, row - 1)]
+  where
+    neighbours = [(col + 1, row), (col - 1, row), (col, row + 1), (col, row - 1)]
 
 search :: Board -> Hand -> Dictionary -> [WordPlacement]
 search board hand dict = do
@@ -32,49 +36,40 @@ search board hand dict = do
   searchFrom (firstCol, firstRow) direction board hand dict
 
 searchFrom :: MatrixIndex -> Direction -> String -> Board -> [Char] -> Dictionary -> [WordPlacement]
-searchFrom startIdx dir startPrefix board startHand dict =
-  f (zip3 indexes hadNeighbour orthogonalPrefsSufs) stardPrefix startHand
+searchFrom startIdx dir startPrefix board startHand dict = f descriptors startPrefix startHand
   where
-  -- TODO: check that the word touches at least one other word (if it's not the first one)
-  -- TODO: if the word touches a letter in the primary direction, the suffix has to be considered as well
-    indexes = takeWhile (\pos -> (board `at` pos) == Empty) $ walk startIdx dir
-    hadNeighbour = foldl (\had idx -> had || hasNeighbour idx board) False allIndexes
-    orthogonalDir = orthogonal dir
-    orthogonalPrefsSufs = map (\idx -> getPrefix idx orthogonalDir board, getSuffix idx orthogonalDir board) indexes
-    
+    descriptors = getDescriptors startIdx dir board (length startHand)
     f [] _ _ = []
-    f ((idx anchored (oPref, oSuf)) : positions) prefix hand =
-      let
-        continue c = f (move idx dir) (prefix ++ [c]) (delete c hand)
-      in do
-        c <- hand
-        let validChar = (null oPref && null oSuf) || (oPref ++ c : oSuf) `S.member` dict
-        let newPref = prefix ++ [c]
-        if not valid
-          then []
-          else 
-
-        map (\c -> if (prefix ++ [c]) `S.member` dict
-                   then ((prefix ++ [c]), startIdx, dir) : continue c
-                   else continue c) $
-        filter (\c -> (null oPref && null oSuf) || (oPref ++ c : oSuf) `S.member` dict) hand
+    f ((Descriptor idx anchored oPref oSuf suffix) : descriptors) prefix hand
+      | not ((null oPref && null oSuf) || (oPref ++ c : oSuf) `S.member` dict) = []
+      | otherwise =
+          let
+            newPref c = prefix ++ [c]
+            fullWord c = prefix ++ c : suffix
+            validWord c = anchored && (fullWord c) `S.member` dict
+            continue c = f descriptors (newPref c) (delete c hand)
+           in map (\c -> if validWord c then (newPref c, startIdx, dir) : continue c else continue c
 
 getDescriptors :: MatrixIndex -> Direction -> Board -> Int -> [PositionDescriptor]
 getDescriptors startIdx dir board maxLen =
-  let
-    indexes = take maxLen $ takeWhile (\pos -> (board `at` pos) == Empty) $ walk startIdx dir
-    hadNeighbour = foldl (\had idx -> had || hasNeighbour idx board) False allIndexes
-    orthogonalDir = orthogonal dir
-  in map (\idx anchored -> PositionDescriptor idx anchored (getPrefix idx orthogonalDir board) (getSuffix idx orthogonalDir board) (getSuffix idx dir board)) (zip indexes hadNeighbour)
+  let indexes = take maxLen $ takeWhile (\pos -> (board `at` pos) == Empty) $ walk startIdx dir
+      hadNeighbour = foldl (\had idx -> had || hasNeighbour idx board) False allIndexes
+      orthogonalDir = orthogonal dir
+   in map (\idx anchored -> PositionDescriptor
+        idx
+        anchored
+        (getPrefix idx orthogonalDir board)
+        (getSuffix idx orthogonalDir board)
+        (getSuffix idx dir board)
+      ) (zip indexes hadNeighbour)
 
-
-data PositionDescriptor = PositionDescriptor {
-    idx :: MatrixIndex,
+data PositionDescriptor = PositionDescriptor
+  { idx :: MatrixIndex,
     isAnchored :: Bool,
     orthogonalPref :: String,
     orthogonalSuff :: String,
     suffix :: String
-}
+  }
 
 --checkOrtogonalDirection :: MatrixIndex -> Direction -> Board -> Dictionary -> Bool
 --checkOrtogonalDirection idx dir board dict = length w == 1 || w `S.member` dict
@@ -110,4 +105,4 @@ walkRev (col, row) dir = case dir of
 takeNonempty :: [MatrixIndex] -> Board -> String
 takeNonempty positions board =
   map (\(Character c) -> c) $
-  takeWhile (\pos -> (board `at` pos) != Empty) positions
+    takeWhile (\pos -> (board `at` pos) != Empty) positions
