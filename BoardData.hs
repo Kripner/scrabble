@@ -1,7 +1,15 @@
 module BoardData where
 
+import Utils
+
 import qualified Data.Sequence as S
 import Data.Char
+
+type Cursor = MatrixIndex
+type World = (Board, Cursor)
+
+initialWorld :: World
+initialWorld = (initialBoard, (boardWidth // 2, boardHeight // 2))
 
 data TileType = Normal | DoubleLetter | TripleLetter | DoubleWord | TripleWord | CenterTile
   deriving (Eq, Show)
