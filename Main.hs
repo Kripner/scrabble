@@ -1,15 +1,14 @@
 module Main where
 
 import BoardData
-import WordSearch hiding (Down)
+import qualified Data.Sequence as S
 import Graphics
-import Utils
-
-import System.Exit
-import qualified Options.Applicative as Opt
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
-import qualified Data.Sequence as S
+import qualified Options.Applicative as Opt
+import System.Exit
+import Utils
+import WordSearch hiding (Down)
 
 dictOption :: Opt.Parser String
 dictOption =
@@ -37,7 +36,7 @@ updateWorld _ = return
 
 printWords :: [WordPlacement] -> IO ()
 printWords words = do
-  putStr "\ESC[2J"  -- clear the console
+  putStr "\ESC[2J" -- clear the console
   if null words then putStrLn "No words found." else printWords'
   where
     printWords' = mapM_ (putStrLn . showWord) (reverse words)
