@@ -12,14 +12,15 @@ windowSize = (1200, 750) :: (Int, Int)
 tileSize = 30 :: Float
 boardSize = (tileSize * fromIntegral boardWidth, tileSize * fromIntegral boardHeight)
 charsScale = 0.2 :: Float
+handOffset = Translate (-90) (-300)
 
 drawWorld :: World -> Picture
 drawWorld (World board cursor hand _) =
   Translate 0 100 $
   Pictures [
     drawBoard board,
-    drawCursor cursor,
-    (Translate (-90) (-300) $ drawHand hand)
+    (handOffset $ drawHand hand),
+    drawCursor cursor
   ]
 
 indexToPosition :: MatrixIndex -> Position
@@ -39,13 +40,12 @@ drawBoard board =
 
 drawHand :: Hand -> Picture
 drawHand hand =
-  Pictures $ map drawTile' $ zip [0 .. handSize - 1] (hand ++ repeat ' ')
+  Pictures $ map drawTile' $ zip [0 .. handSize - 1] hand
   where
     drawTile' (col, c) =
       let x = tileSize * fromIntegral col
           y = 0
-          content = if c == ' ' then Empty else Character c
-      in drawTile (x, y) Normal content
+      in drawTile (x, y) Normal c
 
 drawTile :: Position -> TileType -> TileContent -> Picture
 drawTile (x, y) tile content =
@@ -86,8 +86,8 @@ drawChar :: Char -> Picture
 drawChar c = Translate 30 10 $ Text [c]
 
 drawCursor :: Cursor -> Picture
-drawCursor (BoardCursor pos) =
-  Translate x y $
-  Color (makeColor 0.9 0.3 0.5 0.6) $
-  rectangleSolid tileSize tileSize
-  where (x, y) = indexToPosition pos
+drawCursor cursor = case cursor of
+  (BoardCursor pos) -> (uncurry Translate) (indexToPosition pos) $ drawCursor'
+  (HandIndex i) -> handOffset $ Translate (tileSize * fromIntegral i) 0  $ drawCursor'
+  where
+    drawCursor' = Color (makeColor 0.9 0.3 0.5 0.6) $ rectangleSolid tileSize tileSize

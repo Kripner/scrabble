@@ -39,11 +39,12 @@ hasNeighbour (col, row) board = any (\idx -> isInside idx && board `at` idx /= E
 search :: Board -> Hand -> Dictionary -> [WordPlacement]
 search board hand dict = concat $ do
   -- the topmost, leftmost position of the placed word
+  let availChars = [c | Character c <- hand]
   firstCol <- [0 .. boardWidth - 1]
   firstRow <- [0 .. boardHeight - 1]
   direction <- [Down, Right]
   let prefix = getPrefix (firstCol, firstRow) direction board
-  return $ searchFrom (firstCol, firstRow) direction prefix board hand dict
+  return $ searchFrom (firstCol, firstRow) direction prefix board availChars dict
 
 -- TODO: use tries
 searchFrom :: MatrixIndex -> Direction -> String -> Board -> [Char] -> Dictionary -> [WordPlacement]

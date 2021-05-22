@@ -6,8 +6,9 @@ import qualified Data.Sequence as S
 import qualified Data.Set as Set
 import Data.Char
 
+type Hand = [TileContent]
 handSize = 7 :: Int
-type Hand = [Char]
+initialHand = replicate handSize Empty
 
 type Dictionary = Set.Set String
 data Cursor = BoardCursor MatrixIndex | HandIndex Int
@@ -22,9 +23,13 @@ initialWorld :: Dictionary -> World
 initialWorld dictionary = World {
     board = initialBoard,
     cursor = BoardCursor (boardWidth // 2, boardHeight // 2),
-    hand = [],
+    hand = initialHand,
     dictionary = dictionary
 }
+
+cycleCursor :: Cursor -> Cursor
+cycleCursor (BoardCursor _) = HandIndex 0
+cycleCursor (HandIndex _) = BoardCursor (boardWidth // 2, boardHeight // 2)
 
 data TileType = Normal | DoubleLetter | TripleLetter | DoubleWord | TripleWord | CenterTile
   deriving (Eq, Show)
