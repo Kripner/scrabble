@@ -29,7 +29,7 @@ drawWorld (World board cursor hand _) =
 indexToPosition :: MatrixIndex -> Position
 indexToPosition (col, row) =
   (tileSize * fromIntegral col - (fst boardSize - tileSize) / 2,
-   tileSize * fromIntegral row - (snd boardSize - tileSize) / 2)
+   -tileSize * fromIntegral row + (snd boardSize - tileSize) / 2)
 
 drawBoard :: Board -> Picture
 drawBoard board =

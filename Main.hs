@@ -42,7 +42,7 @@ printWords words = do
   where
     printWords' = mapM_ (putStrLn . showWord) (reverse words)
     showWord (w, pos, dir) = w ++ " at " ++ showPosition pos ++ " (direction: " ++ show dir ++ ")"
-    showPosition (col, row) = show (col + 1) ++ [toEnum (boardHeight - row - 1 + fromEnum 'A')]
+    showPosition (col, row) = show (col + 1) ++ [toEnum (row + fromEnum 'A')]
 
 -- Controls
 
@@ -74,9 +74,9 @@ handleUpdateCursor key (BoardCursor (col, row)) =
   where
     (newCol, newRow) = case key of
       KeyLeft -> (col - 1, row)
-      KeyUp -> (col, row + 1)
+      KeyUp -> (col, row - 1)
       KeyRight -> (col + 1, row)
-      KeyDown -> (col, row - 1)
+      KeyDown -> (col, row + 1)
       _ -> (col, row)
 handleUpdateCursor key (HandIndex idx) =
   HandIndex $ clamp 0 (handSize - 1) newIdx

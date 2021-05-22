@@ -19,10 +19,6 @@ type WordPlacement = (String, MatrixIndex, Direction)
 loadDictionary :: String -> IO Dictionary
 loadDictionary file = S.fromList <$> (map . map) toUpper <$> lines <$> readFile file
 
-sampleHand = "HELL"
-sampleDict = S.fromList ["HELLO", "BOX", "WINDOW"]
-
-
 orthogonal :: Direction -> Direction
 orthogonal Down = Right
 orthogonal Right = Down
@@ -46,7 +42,6 @@ search board hand dict = concat $ do
   let prefix = getPrefix (firstCol, firstRow) direction board
   return $ searchFrom (firstCol, firstRow) direction prefix board availChars dict
 
--- TODO: use tries
 searchFrom :: MatrixIndex -> Direction -> String -> Board -> [Char] -> Dictionary -> [WordPlacement]
 searchFrom startIdx dir startPrefix board startHand dict = searchFrom' descriptors startPrefix startHand
   where
