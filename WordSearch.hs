@@ -23,9 +23,9 @@ orthogonal :: Direction -> Direction
 orthogonal Down = Right
 orthogonal Right = Down
 
-move :: MatrixIndex -> Direction -> MatrixIndex
-move (col, row) Down = (col, row + 1)
-move (col, row) Right = (col + 1, row)
+move :: MatrixIndex -> Direction -> Int -> MatrixIndex
+move (col, row) Down d = (col, row + d)
+move (col, row) Right d = (col + d, row)
 
 hasNeighbour :: MatrixIndex -> Board -> Bool
 hasNeighbour (col, row) board = any (\idx -> isInside idx && board `at` idx /= Empty) neighbours
@@ -45,6 +45,7 @@ search board hand dict = concat $ do
 searchFrom :: MatrixIndex -> Direction -> String -> Board -> [Char] -> Dictionary -> [WordPlacement]
 searchFrom startIdx dir startPrefix board startHand dict = searchFrom' descriptors startPrefix startHand
   where
+    prefixStart = move startIdx dir (-length startPrefix)
     descriptors = getDescriptors startIdx dir board (length startHand)
     searchFrom' [] _ _ = []
     searchFrom' ((PositionDescriptor idx anchored oPref oSuf suffix) : descriptors) prefix hand =
@@ -54,7 +55,7 @@ searchFrom startIdx dir startPrefix board startHand dict = searchFrom' descripto
         validWord c = anchored && (fullWord c) `S.member` dict
         continue c = searchFrom' descriptors (newPref c) (delete c hand)
        in concat $
-          map (\c -> if validWord c then (fullWord c, startIdx, dir) : continue c else continue c) $
+          map (\c -> if validWord c then (fullWord c, prefixStart, dir) : continue c else continue c) $
           filter (\c -> (null oPref && null oSuf) || (oPref ++ c : oSuf) `S.member` dict) hand
 
 getDescriptors :: MatrixIndex -> Direction -> Board -> Int -> [PositionDescriptor]
@@ -107,8 +108,8 @@ walk (col, row) dir = case dir of
 
 walkRev :: MatrixIndex -> Direction -> [MatrixIndex]
 walkRev (col, row) dir = case dir of
-  Down -> map (col,) [row, row - 1 .. boardHeight - 1]
-  Right -> map (,row) [col, col - 1 .. boardWidth - 1]
+  Down -> map (col,) [row, row - 1 .. 0]
+  Right -> map (,row) [col, col - 1 .. 0]
 
 takeNonempty :: [MatrixIndex] -> Board -> String
 takeNonempty positions board =
