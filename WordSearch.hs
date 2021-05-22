@@ -11,14 +11,10 @@ import qualified Data.Set as S
 import Prelude hiding (Right)
 import Debug.Trace
 
-type Hand = [Char]
-
 data Direction = Down | Right
   deriving (Eq, Show)
 
 type WordPlacement = (String, MatrixIndex, Direction)
-
-type Dictionary = S.Set String
 
 loadDictionary :: String -> IO Dictionary
 loadDictionary file = S.fromList <$> (map . map) toUpper <$> lines <$> readFile file

@@ -1,6 +1,7 @@
 module Graphics where
 
 import BoardData
+import WordSearch
 
 import Control.Applicative
 import Graphics.Gloss
@@ -13,11 +14,12 @@ boardSize = (tileSize * fromIntegral boardWidth, tileSize * fromIntegral boardHe
 charsScale = 0.2 :: Float
 
 drawWorld :: World -> Picture
-drawWorld (board, cursor) =
+drawWorld (World board cursor hand _) =
   Translate 0 100 $
   Pictures [
     drawBoard board,
-    drawCursor cursor
+    drawCursor cursor,
+    (Translate (-90) (-300) $ drawHand hand)
   ]
 
 indexToPosition :: MatrixIndex -> Position
@@ -34,6 +36,16 @@ drawBoard board =
   where
     drawTile' col row = let pos = (col, row)
                         in drawTile (indexToPosition pos) (tiles `at` pos) (board `at` pos)
+
+drawHand :: Hand -> Picture
+drawHand hand =
+  Pictures $ map drawTile' $ zip [0 .. handSize - 1] (hand ++ repeat ' ')
+  where
+    drawTile' (col, c) =
+      let x = tileSize * fromIntegral col
+          y = 0
+          content = if c == ' ' then Empty else Character c
+      in drawTile (x, y) Normal content
 
 drawTile :: Position -> TileType -> TileContent -> Picture
 drawTile (x, y) tile content =
@@ -74,7 +86,7 @@ drawChar :: Char -> Picture
 drawChar c = Translate 30 10 $ Text [c]
 
 drawCursor :: Cursor -> Picture
-drawCursor pos =
+drawCursor (BoardCursor pos) =
   Translate x y $
   Color (makeColor 0.9 0.3 0.5 0.6) $
   rectangleSolid tileSize tileSize

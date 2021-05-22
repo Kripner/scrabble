@@ -3,13 +3,28 @@ module BoardData where
 import Utils
 
 import qualified Data.Sequence as S
+import qualified Data.Set as Set
 import Data.Char
 
-type Cursor = MatrixIndex
-type World = (Board, Cursor)
+handSize = 7 :: Int
+type Hand = [Char]
 
-initialWorld :: World
-initialWorld = (initialBoard, (boardWidth // 2, boardHeight // 2))
+type Dictionary = Set.Set String
+data Cursor = BoardCursor MatrixIndex | HandIndex Int
+data World = World {
+    board :: Board,
+    cursor :: Cursor,
+    hand :: Hand,
+    dictionary :: Dictionary
+}
+
+initialWorld :: Dictionary -> World
+initialWorld dictionary = World {
+    board = initialBoard,
+    cursor = BoardCursor (boardWidth // 2, boardHeight // 2),
+    hand = [],
+    dictionary = dictionary
+}
 
 data TileType = Normal | DoubleLetter | TripleLetter | DoubleWord | TripleWord | CenterTile
   deriving (Eq, Show)
