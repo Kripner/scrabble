@@ -8,16 +8,19 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 
 type Position = (Float, Float)
-windowSize = (1200, 750) :: (Int, Int)
+windowSize = (750, 750) :: (Int, Int)
 tileSize = 30 :: Float
 boardSize = (tileSize * fromIntegral boardWidth, tileSize * fromIntegral boardHeight)
 charsScale = 0.2 :: Float
 handOffset = Translate (-90) (-300)
 
-drawWorld :: World -> Picture
+drawWorld :: World -> IO Picture
 drawWorld (World board cursor hand _) =
+  return $
   Translate 0 100 $
   Pictures [
+    drawColNums,
+    drawRowNums,
     drawBoard board,
     (handOffset $ drawHand hand),
     drawCursor cursor
@@ -37,6 +40,22 @@ drawBoard board =
   where
     drawTile' col row = let pos = (col, row)
                         in drawTile (indexToPosition pos) (tiles `at` pos) (board `at` pos)
+
+drawColNums :: Picture
+drawColNums = Pictures $ map drawColNum [0 .. boardWidth - 1]
+  where
+    drawColNum i =
+      Translate (fromIntegral i * tileSize - (fst boardSize - tileSize) / 2 - 5) (snd boardSize / 2 + 7) $
+      Scale 0.1 0.1 $
+      Text $ show (i + 1)
+
+drawRowNums :: Picture
+drawRowNums = Pictures $ map drawRowNum [0 .. boardWidth - 1]
+  where
+    drawRowNum i =
+      Translate (fst boardSize / (-2) - 23) (-fromIntegral i * tileSize + (fst boardSize - tileSize) / 2 - 7)  $
+      Scale 0.1 0.1 $
+      Text $ [toEnum (i + fromEnum 'A')]
 
 drawHand :: Hand -> Picture
 drawHand hand =

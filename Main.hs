@@ -5,9 +5,10 @@ import WordSearch hiding (Down)
 import Graphics
 import Utils
 
+import System.Exit
 import qualified Options.Applicative as Opt
 import Graphics.Gloss
-import Graphics.Gloss.Interface.IO.Interact
+import Graphics.Gloss.Interface.IO.Game
 import qualified Data.Sequence as S
 
 dictOption :: Opt.Parser String
@@ -29,27 +30,37 @@ main :: IO ()
 main = do
   dictFile <- Opt.execParser optsParser
   dictionary <- loadDictionary dictFile
-  play (InWindow "Scrabble" windowSize (0, 0)) white 1 (initialWorld dictionary) drawWorld handleEvent updateWorld
+  playIO (InWindow "Scrabble" windowSize (0, 0)) white 1 (initialWorld dictionary) drawWorld handleEvent updateWorld
 
-updateWorld :: Float -> World -> World
-updateWorld _ = id
+updateWorld :: Float -> World -> IO World
+updateWorld _ = return
+
+printWords :: [WordPlacement] -> IO ()
+printWords words = do
+  putStr "\ESC[2J"  -- clear the console
+  if null words then putStrLn "No words found." else printWords'
+  where
+    printWords' = mapM_ (putStrLn . showWord) (reverse words)
+    showWord (w, pos, dir) = w ++ " at " ++ showPosition pos ++ " (direction: " ++ show dir ++ ")"
+    showPosition (col, row) = show (col + 1) ++ [toEnum (boardHeight - row - 1 + fromEnum 'A')]
 
 -- Controls
 
-handleEvent :: Event -> World -> World
+handleEvent :: Event -> World -> IO World
 handleEvent (EventKey key Down _ _) w@(World board cursor hand dict) = case key of
-  Char c -> handleUpdateLetter c w
-  SpecialKey KeySpace -> handleUpdateLetter ' ' w
-  SpecialKey KeyTab -> World board (cycleCursor cursor) hand dict
-  SpecialKey k -> World board (handleUpdateCursor k cursor) hand dict
-  _ -> w
-handleEvent _ w = w
+  Char c -> return $ handleUpdateLetter c w
+  SpecialKey KeyEsc -> exitSuccess
+  SpecialKey KeySpace -> return $ handleUpdateLetter ' ' w
+  SpecialKey KeyTab -> return $ World board (cycleCursor cursor) hand dict
+  SpecialKey KeyEnter -> printWords (take 50 (searchSorted board hand dict)) >> return w
+  SpecialKey k -> return $ World board (handleUpdateCursor k cursor) hand dict
+  _ -> return w
+handleEvent _ w = return w
 
 handleUpdateLetter :: Char -> World -> World
 handleUpdateLetter c w@(World board cursor hand dict)
   | isValidInput c = updateTile cursor (Character $ normalizeInput c)
   | c == ' ' = updateTile cursor Empty
--- | c == '1' = w `debug` show (head (search board sampleHand sampleDict))
   | otherwise = w
   where
     updateTile (BoardCursor boardPos) newContent =

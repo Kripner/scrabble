@@ -48,7 +48,7 @@ search board hand dict = concat $ do
 
 -- TODO: use tries
 searchFrom :: MatrixIndex -> Direction -> String -> Board -> [Char] -> Dictionary -> [WordPlacement]
-searchFrom startIdx dir startPrefix board startHand dict = searchFrom' descriptors startPrefix startHand `debug` (show (filter (\d -> isAnchored d) descriptors))
+searchFrom startIdx dir startPrefix board startHand dict = searchFrom' descriptors startPrefix startHand
   where
     descriptors = getDescriptors startIdx dir board (length startHand)
     searchFrom' [] _ _ = []
@@ -118,3 +118,17 @@ walkRev (col, row) dir = case dir of
 takeNonempty :: [MatrixIndex] -> Board -> String
 takeNonempty positions board =
   map (\(Character c) -> c) $ takeWhile (/= Empty) $ map (at board) positions
+
+searchFiltered :: Board -> Hand -> Dictionary -> [WordPlacement]
+searchFiltered board hand dict =
+  fst $ foldl tryAdd ([], S.empty) allWords
+  where
+    allWords = search board hand dict
+    tryAdd (results, seenWords) wp@(w, _, _) =
+      if w `S.member` seenWords
+          then (results, seenWords)
+          else (wp : results, w `S.insert` seenWords)
+
+searchSorted :: Board -> Hand -> Dictionary -> [WordPlacement]
+searchSorted board hand dict = reverse $ sortOn (\(w, _, _) -> length w) words
+  where words = searchFiltered board hand dict
