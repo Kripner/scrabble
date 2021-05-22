@@ -58,7 +58,8 @@ executable scrabble
     build-depends:
         base ^>=4.14.1.0,
         gloss==1.13.*,
-        containers==0.6.*
+        containers==0.6.*,
+        optparse-applicative==0.16.*
 
     -- Directories containing source files.
     -- hs-source-dirs:

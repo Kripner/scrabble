@@ -5,12 +5,31 @@ import WordSearch hiding (Down)
 import Graphics
 import Utils
 
+import qualified Options.Applicative as Opt
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 import qualified Data.Sequence as S
 
+dictOption :: Opt.Parser String
+dictOption =
+  Opt.strOption $
+    Opt.long "words"
+      <> Opt.short 'w'
+      <> Opt.value "words.txt"
+      <> Opt.metavar "FILE"
+      <> Opt.help "File containing all valid words, each on a separate line."
+
+optsParser =
+  Opt.info (Opt.helper <*> dictOption) $
+    Opt.progDesc "Allows to manage content of a Scrabble board and search for words to place."
+      <> Opt.header "Scrabble solver"
+      <> Opt.footer "A project for NPRG005."
+
 main :: IO ()
-main = play (InWindow "Scrabble" windowSize (0, 0)) white 1 initialWorld drawWorld handleEvent updateWorld
+main = do
+  dictFile <- Opt.execParser optsParser
+  dictionary <- loadDictionary dictFile
+  play (InWindow "Scrabble" windowSize (0, 0)) white 1 initialWorld drawWorld handleEvent updateWorld
 
 updateWorld :: Float -> World -> World
 updateWorld _ = id

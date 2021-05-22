@@ -5,6 +5,7 @@ module WordSearch where
 import BoardData
 import Utils
 
+import Data.Char
 import Data.List
 import qualified Data.Set as S
 import Prelude hiding (Right)
@@ -19,6 +20,8 @@ type WordPlacement = (String, MatrixIndex, Direction)
 
 type Dictionary = S.Set String
 
+loadDictionary :: String -> IO Dictionary
+loadDictionary file = S.fromList <$> (map . map) toUpper <$> lines <$> readFile file
 
 sampleHand = "HELL"
 sampleDict = S.fromList ["HELLO", "BOX", "WINDOW"]
